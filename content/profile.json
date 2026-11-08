@@ -77,8 +77,8 @@
         "ja": "奈良先端科学技術大学院大学（NAIST）"
       },
       "sub": {
-        "en": "Division of Information Science",
-        "ja": "先端科学技術研究科 情報科学領域"
+        "en": "Division of Information Science, <a href=\"https://hai-lab.naist.jp/\" target=\"_blank\" rel=\"noopener\">Human-AI Interaction Laboratory (Sakti Lab)</a>",
+        "ja": "先端科学技術研究科 情報科学領域 <a href=\"https://hai-lab.naist.jp/\" target=\"_blank\" rel=\"noopener\">ヒューマンAIインタラクション研究室（サクテイ研究室）</a>"
       },
       "detail": {
         "en": "Research topic: layer-wise analysis of phonemic and prosodic information in self-supervised speech models.",
