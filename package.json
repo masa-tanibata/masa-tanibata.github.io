@@ -1,0 +1,13 @@
+{
+  "name": "masa-tanibata-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node src/serve.mjs",
+    "build": "node src/build.mjs",
+    "serve": "node src/serve.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
