@@ -26,8 +26,13 @@ export function t(v, tag = 'span', attrs = '') {
   // second class attribute — browsers keep only the first one.
   const own = attrs.match(/class="([^"]*)"/);
   const rest = own ? attrs.replace(/\s*class="[^"]*"/, '').trim() : attrs.trim();
+  // Both languages ship in the HTML and only one is displayed, so each side carries its
+  // own lang= -- that is what tells a crawler the hidden half is Japanese, not mis-set
+  // English, and what makes a screen reader switch voices on the toggle.
   const wrap = (cls, s) =>
-    `<${tag} class="${own ? `${cls} ${own[1]}` : cls}"${rest ? ' ' + rest : ''}>${s}</${tag}>`;
+    `<${tag} class="${own ? `${cls} ${own[1]}` : cls}" lang="${cls === 'i-ja' ? 'ja' : 'en'}"${
+      rest ? ' ' + rest : ''
+    }>${s}</${tag}>`;
   if (v == null) return '';
   if (typeof v === 'string')
     return tag === 'span' && !attrs ? v : `<${tag}${a}>${v}</${tag}>`;
@@ -47,7 +52,7 @@ export const one = (v, lang = 'en') => {
 export const period = (p) =>
   typeof p === 'string' ? esc(p) : `${esc(p.from)} – ${t(p.to)}`;
 
-export function page({ title, description, path, head = '', sidebar, body, siteUrl }) {
+export function page({ title, description, path, head = '', sidebar, body, siteUrl, image, verify }) {
   const canonical = `${siteUrl.replace(/\/$/, '')}/${path === 'index.html' ? '' : path}`;
   const nav = [
     { href: 'index.html', label: { en: 'Home', ja: 'ホーム' } },
@@ -68,6 +73,15 @@ export function page({ title, description, path, head = '', sidebar, body, siteU
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(plain(description))}">
 <meta property="og:url" content="${esc(canonical)}">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ja_JP">
+${image ? `<meta property="og:image" content="${esc(image)}">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="${esc(image)}">` : ''}
+${Object.entries(verify ?? {})
+  .filter(([, v]) => v && !String(v).startsWith('TODO'))
+  .map(([k, v]) => `<meta name="${esc(k)}" content="${esc(v)}">`)
+  .join('\n')}
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

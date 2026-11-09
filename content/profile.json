@@ -5,7 +5,12 @@
     "cvUpdated": "2026-09",
     "photo": "img/profile.jpg",
     "cvSource": "local",
-    "cvDriveId": "TODO: Google Drive のファイルID（cvSource を drive にする場合のみ。共有設定は「リンクを知っている全員が閲覧者」）"
+    "cvDriveId": "TODO: Google Drive のファイルID（cvSource を drive にする場合のみ。共有設定は「リンクを知っている全員が閲覧者」）",
+    "_verifyNote": "検索エンジンの所有権確認トークン。Google Search Console / Bing Webmaster Tools で「HTMLタグ」方式を選ぶと content=\"...\" の値が出るので、それだけを下に貼る（空なら meta タグは出力されない）",
+    "verify": {
+      "google-site-verification": "",
+      "msvalidate.01": ""
+    }
   },
   "name": {
     "en": "Masaru Tanibata",

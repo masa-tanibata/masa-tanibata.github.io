@@ -19,6 +19,22 @@ try {
   process.exit(1);
 }
 const SITE = p.meta.siteUrl;
+const ABS = (u) => `${SITE.replace(/\/$/, '')}/${String(u).replace(/^\//, '')}`;
+
+// Search engines index one <title> and one description per page, not the toggled view, so
+// both of those carry both languages: people look for "谷端真瑠" as readily as for
+// "Masaru Tanibata", and only text that is actually in the tag can be matched.
+const NAME_EN = one(p.name, 'en');
+const NAME_JA = one(p.name, 'ja');
+const FULL_NAME = NAME_JA && NAME_JA !== NAME_EN ? `${NAME_EN}（${NAME_JA}）` : NAME_EN;
+const bilingual = (v) => {
+  const en = plain(one(v, 'en'));
+  const ja = plain(one(v, 'ja'));
+  // The Japanese role string already uses ／ internally, so the two halves are joined
+  // with ｜ instead -- otherwise the description reads as one four-part list.
+  return ja && ja !== en ? `${en}｜${ja}` : en;
+};
+const uniqueBy = (xs, key) => [...new Map(xs.map((x) => [key(x), x])).values()];
 
 // Links still marked TODO are dropped rather than shipped broken (the build warns instead).
 const live = (links) => links.filter((l) => !/^TODO/.test(l.url));
@@ -187,20 +203,36 @@ const ico = (id) => homeSections.find((s) => s.id === id).icon;
 const lab = (id) => homeSections.find((s) => s.id === id).label;
 
 const home = page({
-  title: `${one(p.name)} — ${one(p.role)}`,
-  description: one(p.tagline) || one(p.role),
+  title: `${FULL_NAME} — ${one(p.role)}`,
+  description: bilingual(one(p.tagline) ? p.tagline : p.role),
   path: 'index.html',
   siteUrl: SITE,
+  image: p.meta.photo ? ABS(p.meta.photo) : undefined,
+  verify: p.meta.verify,
   sidebar: sidebar(null),
+  // Structured data is what lets a search engine treat these pages as one person rather
+  // than two documents: the Japanese spelling as an alternate name for the same entity,
+  // and the affiliations and links that corroborate which Masaru Tanibata this is.
   head: `<script type="application/ld+json">${JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'Person',
-    name: one(p.name),
+    name: NAME_EN,
+    alternateName: NAME_JA && NAME_JA !== NAME_EN ? NAME_JA : undefined,
     jobTitle: one(p.role),
     url: SITE,
-    email: p.links.find((l) => l.id === 'email')?.url.replace('mailto:', ''),
+    image: p.meta.photo ? ABS(p.meta.photo) : undefined,
+    email: p.contact?.email || p.links.find((l) => l.id === 'email')?.url.replace('mailto:', ''),
     sameAs: live(p.links).filter((l) => /^https?:/.test(l.url)).map((l) => l.url),
-    description: plain(one(p.tagline) || one(p.role)),
+    homeLocation: one(p.location) ? { '@type': 'Place', name: plain(one(p.location)) } : undefined,
+    affiliation: uniqueBy(
+      [
+        ...(p.education ?? []).map((e) => ({ '@type': 'CollegeOrUniversity', name: plain(one(e.org)) })),
+        ...(p.experience ?? []).map((e) => ({ '@type': 'Organization', name: plain(one(e.org)) })),
+      ].filter((x) => x.name),
+      (x) => x.name
+    ),
+    knowsAbout: (p.interests ?? []).flatMap((x) => [plain(one(x, 'en')), plain(one(x, 'ja'))]).filter(Boolean),
+    description: bilingual(one(p.tagline) ? p.tagline : p.role),
   })}</script>`,
   body: `
 ${p.tagline ? `<p class="tagline">${t(p.tagline)}</p>` : ''}
@@ -327,10 +359,12 @@ const cvViewer = () => {
 };
 
 const cv = page({
-  title: `CV — ${one(p.name)}`,
-  description: `Curriculum vitae of ${one(p.name)}.`,
+  title: `CV — ${FULL_NAME}`,
+  description: `Curriculum vitae of ${NAME_EN}｜${NAME_JA} の経歴・業績。`,
   path: 'cv.html',
   siteUrl: SITE,
+  image: p.meta.photo ? ABS(p.meta.photo) : undefined,
+  verify: p.meta.verify,
   sidebar: sidebar(null),
   body: `
 <div class="cv-top">
@@ -368,6 +402,12 @@ writeFileSync(resolve(DIST, 'index.html'), home);
 writeFileSync(resolve(DIST, 'cv.html'), cv);
 if (existsSync(resolve(ROOT, 'public'))) cpSync(resolve(ROOT, 'public'), DIST, { recursive: true });
 writeFileSync(resolve(DIST, '.nojekyll'), '');
+// Without a robots.txt a crawler guesses "allow everything", which is right here anyway --
+// the file is worth writing because it is also where the sitemap gets advertised.
+writeFileSync(
+  resolve(DIST, 'robots.txt'),
+  `User-agent: *\nAllow: /\n\nSitemap: ${SITE.replace(/\/$/, '')}/sitemap.xml\n`
+);
 writeFileSync(
   resolve(DIST, 'sitemap.xml'),
   `<?xml version="1.0" encoding="UTF-8"?>
