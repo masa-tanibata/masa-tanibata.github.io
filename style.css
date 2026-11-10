@@ -125,7 +125,9 @@ li { margin-bottom: .45rem; }
 .entries .org::before { content: ", "; }
 .entries .sub::before, .entries .detail::before { content: " — "; }
 /* Japanese reads better with its own punctuation than with comma + em dash */
-html[data-lang="ja"] .entries .org::before { content: "、"; }
+/* A comma between a role and the organisation reads as a list in Japanese; a full-width
+   space is how a Japanese CV separates them. */
+html[data-lang="ja"] .entries .org::before { content: "　"; }
 html[data-lang="ja"] .entries .sub::before,
 html[data-lang="ja"] .entries .detail::before { content: "／"; }
 .entries .sub, .entries .detail { color: var(--ink-soft); }
